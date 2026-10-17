@@ -1,7 +1,7 @@
 -- Read-only. Safe for the intended Supabase project: no fixtures or writes.
 -- 1) Expected tables, tenant RLS and client grants.
 with expected(name) as (values
- ('companies'),('company_members'),('suppliers'),('agreements'),('policies'),('wallets'),('budgets'),('documents'),('invoices'),('decisions'),('approvals'),('reservations'),('wallet_movements'),('audit_events'),('operation_requests'),('invoice_reviews')
+ ('companies'),('company_members'),('suppliers'),('agreements'),('policies'),('wallets'),('budgets'),('documents'),('invoices'),('decisions'),('approvals'),('reservations'),('wallet_movements'),('audit_events'),('operation_requests'),('invoice_reviews'),('agent_runs')
 )
 select e.name as tabla,c.oid is not null as existe,coalesce(c.relrowsecurity,false) as rls_activo,
  coalesce(has_table_privilege('authenticated',c.oid,'SELECT'),false) as lectura_autenticada,
@@ -16,7 +16,8 @@ with expected(signature,caller) as (values
  ('public.payguard_finish_extraction(uuid,uuid,jsonb,text)','service_role'),
  ('public.payguard_confirm_invoice(uuid,uuid,integer,uuid,uuid,text,text,text,date,date,boolean)','authenticated'),
  ('public.payguard_process_invoice(uuid,text,uuid,uuid,text)','authenticated'),
- ('public.payguard_refund_invoice(uuid,uuid,text,text)','authenticated')
+ ('public.payguard_refund_invoice(uuid,uuid,text,text)','authenticated'),
+ ('public.payguard_run_agent(uuid,uuid)','authenticated')
 )
 select signature as funcion,caller as rol_esperado,to_regprocedure(signature) is not null as existe,
  coalesce(has_function_privilege(caller,to_regprocedure(signature),'EXECUTE'),false) as rol_puede_ejecutar,
@@ -37,3 +38,5 @@ select currency,period,total,reserved,spent,available from public.budgets where 
 
 -- 5) Verify the terminal-state extraction guard from migration 005 by its audit event.
 select coalesce(position('extraction_ignored_closed_invoice' in pg_get_functiondef(to_regprocedure('public.payguard_finish_extraction(uuid,uuid,jsonb,text)')))>0,false) as proteccion_extraccion_tardia_005;
+
+select name,agent_enabled from public.companies where id='10000000-0000-4000-8000-000000000001';

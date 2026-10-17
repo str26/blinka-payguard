@@ -12,7 +12,7 @@ async function get(target,headers){try{const response=await fetch(target,{header
 const privileged={apikey:secret,...(secret.startsWith('eyJ')?{Authorization:`Bearer ${secret}`}:{})};
 const publicHeaders={apikey:publicKey};
 const tables={
- companies:'id,name,is_demo',company_members:'company_id,user_id,role',suppliers:'id,company_id,code,allowed',agreements:'id,company_id,supplier_id,currency,amount',
+ companies:'id,name,is_demo,agent_enabled',company_members:'company_id,user_id,role',suppliers:'id,company_id,code,allowed',agreements:'id,company_id,supplier_id,currency,amount',
  policies:'id,company_id,currency,version,automatic_limit,absolute_limit,active',wallets:'id,company_id,currency,balance,reserved,available',
  budgets:'id,company_id,currency,period,total,reserved,spent,available',documents:'id,company_id,storage_path,sha256,mime_type',
  invoices:'id,company_id,version,status,review_reasons,extraction_state,extraction_attempts,extraction_lease,extraction_error,extracted_data',
@@ -20,6 +20,7 @@ const tables={
  reservations:'id,invoice_id,decision_id,budget_id,wallet_id,currency,amount,status',wallet_movements:'id,invoice_id,wallet_id,original_movement_id,kind,currency,amount,idempotency_key',
  audit_events:'id,company_id,actor_id,event_type,entity_id',operation_requests:'company_id,request_id,actor_id,input,response',invoice_reviews:'company_id,request_id,invoice_id,actor_id,input,response',
 };
+tables.agent_runs='id,company_id,invoice_id,actor_id,request_id,invoice_version,state,steps,reasons,response';
 const entries=Object.entries(tables);
 for(let i=0;i<entries.length;i+=3){
  await Promise.all(entries.slice(i,i+3).map(async([name,columns])=>{
