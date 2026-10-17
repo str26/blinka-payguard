@@ -6,16 +6,16 @@ import styles from '../../workspace.module.css';
 export type SupplierOption={id:string;code:string;name:string;allowed:boolean};
 export type AgreementOption={id:string;supplier_id:string;reference:string;currency:string;amount:string};
 export type ReviewFields={supplier_id:string;agreement_id:string;invoice_number:string;currency:string;amount:string;issue_date:string;due_date:string};
-export default function ReviewForm({id,version,initial,suppliers,agreements}:{id:string;version:number;initial:ReviewFields;suppliers:SupplierOption[];agreements:AgreementOption[]}){
+export default function ReviewForm({id,version,initial,suppliers,agreements,agentEnabled=false}:{id:string;version:number;initial:ReviewFields;suppliers:SupplierOption[];agreements:AgreementOption[];agentEnabled?:boolean}){
  const [fields,setFields]=useState(initial);const [acknowledged,setAcknowledged]=useState(false);
- const [busy,setBusy]=useState(false);const [error,setError]=useState('');
+ const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [result,setResult]=useState('');
  const pending=useRef<{fingerprint:string;request:string}|null>(null);const router=useRouter();
  function change(key:keyof ReviewFields,value:string){setAcknowledged(false);setFields(old=>({...old,[key]:value,...((key==='supplier_id'||key==='currency')?{agreement_id:''}:{})}));}
  const available=agreements.filter(a=>a.supplier_id===fields.supplier_id && a.currency===fields.currency);
- return <section className={styles.section}><h2>Revisar y confirmar</h2>
-  <p className={styles.description}>Corrige los datos contra el original. Selecciona el proveedor registrado y su acuerdo. Si las reglas autorizan, se reservarán fondos; esta acción no ejecuta el pago simulado.</p>
+ return <section className={styles.section}><h2>{agentEnabled?'Resolver excepción y reanudar':'Revisar y confirmar'}</h2>
+  <p className={styles.description}>{agentEnabled?'Corrige los datos contra el original y selecciona proveedor y acuerdo. Al confirmar, el agente vuelve a validar y ejecuta el pago simulado si todas las reglas lo permiten.':'Corrige los datos contra el original. Selecciona proveedor y acuerdo. Si las reglas autorizan, se reservarán fondos.'}</p>
   <form className={styles.form} onSubmit={async event=>{
-   event.preventDefault();if(busy)return;setError('');
+   event.preventDefault();if(busy)return;setError('');setResult('');
    const values={version,...fields,agreement_id:fields.agreement_id||null,acknowledged};
    const fingerprint=JSON.stringify(values);
    if(!pending.current || pending.current.fingerprint!==fingerprint)pending.current={fingerprint,request:crypto.randomUUID()};
@@ -28,6 +28,7 @@ export default function ReviewForm({id,version,initial,suppliers,agreements}:{id
     const body=await res.json();
     if(!res.ok){setError(body.error||'No se pudo confirmar.');return;}
     pending.current=null;
+    setResult(body.status==='pending_approval'?'Datos confirmados. Falta la aprobación del gasto: un admin o approver debe indicar un motivo y pulsar «Aprobar y continuar con el agente» en Acciones.':body.status==='blocked'?'El pago sigue bloqueado por una regla. Revisa la tabla de reglas; confirmar otra vez los mismos datos no elimina el bloqueo.':body.status==='paid_simulated'?'Pago simulado completado.':body.status==='needs_review'?'Todavía falta una validación. Consulta los motivos antes de volver a confirmar.':'Datos confirmados. Consulta el estado actualizado.');
     router.refresh();
    }catch{setError('No se pudo confirmar la respuesta. Reintenta sin cambiar los datos: se usará la misma solicitud para evitar duplicados.');}
    finally{setBusy(false);}
@@ -39,9 +40,10 @@ export default function ReviewForm({id,version,initial,suppliers,agreements}:{id
    <label htmlFor="review-agreement">Acuerdo del proveedor y moneda</label><select id="review-agreement" value={fields.agreement_id} onChange={e=>change('agreement_id',e.target.value)} disabled={busy}><option value="">Sin acuerdo confirmado · requerirá revisión</option>{available.map(a=><option key={a.id} value={a.id}>{a.reference} · {a.currency} {a.amount}</option>)}</select>
    <label htmlFor="review-issued">Fecha de emisión</label><input id="review-issued" type="date" value={fields.issue_date} onChange={e=>change('issue_date',e.target.value)} min="1900-01-01" max="9999-12-31" required disabled={busy}/>
    <label htmlFor="review-due">Fecha de vencimiento</label><input id="review-due" type="date" value={fields.due_date} onChange={e=>change('due_date',e.target.value)} min={fields.issue_date||'1900-01-01'} max="9999-12-31" required disabled={busy}/>
-   <label className={styles.confirmation}><input type="checkbox" checked={acknowledged} onChange={e=>setAcknowledged(e.target.checked)} required disabled={busy}/>Revisé los campos y las advertencias de Gemini contra el documento original. Confirmo los datos para evaluar las reglas y, si procede, reservar fondos de simulación.</label>
+   <label className={styles.confirmation}><input type="checkbox" checked={acknowledged} onChange={e=>setAcknowledged(e.target.checked)} required disabled={busy}/>Revisé los campos y las advertencias de Gemini contra el documento original. {agentEnabled?'Confirmo los datos corregidos para que el agente evalúe y, si procede, pague en simulación.':'Confirmo los datos para evaluar las reglas y, si procede, reservar fondos de simulación.'}</label>
+   {result && <p role="status" className={styles.note}>{result}</p>}
    {error && <p role="alert" className={styles.error}>{error}</p>}
-   <button className={styles.button} disabled={busy}>{busy?'Confirmando y evaluando…':'Confirmar datos y evaluar reglas'}</button>
+   <button className={styles.button} disabled={busy}>{busy?'Confirmando y evaluando…':agentEnabled?'Confirmar corrección y reanudar agente':'Confirmar datos y evaluar reglas'}</button>
   </form>
  </section>;
 }

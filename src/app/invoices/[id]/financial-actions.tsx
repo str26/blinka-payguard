@@ -4,10 +4,10 @@ import { useRouter } from 'next/navigation';
 import { actionLabels,availableActions,validateAction,type FinancialAction } from '@/modules/invoices/domain/actions';
 import { statusLabels } from '@/modules/invoices/domain/review';
 import styles from '../../workspace.module.css';
-export default function FinancialActions({id,status,role,decisionId}:{id:string;status:string;role:string;decisionId:string|null}){
+export default function FinancialActions({id,status,role,decisionId,agentEnabled=false}:{id:string;status:string;role:string;decisionId:string|null;agentEnabled?:boolean}){
  const [reason,setReason]=useState('');const [busy,setBusy]=useState(false);const [message,setMessage]=useState('');
  const pending=useRef<{fingerprint:string;request:string}|null>(null);const router=useRouter();
- const actions=availableActions(status,role,!!decisionId);
+ const actions=availableActions(status,role,!!decisionId).filter(action=>!(agentEnabled&&action==='pay') && !(status==='pending_approval'&&action==='evaluate'));
  if(!actions.length)return null;
  async function execute(action:FinancialAction){
   if(busy)return;setMessage('');
@@ -30,9 +30,9 @@ export default function FinancialActions({id,status,role,decisionId}:{id:string;
   finally{setBusy(false);}
  }
  return <section className={styles.section} aria-label="Acciones de la factura"><h2>Acciones</h2>
-  <p className={styles.note}>Operaciones de simulación. Cada acción vuelve a comprobar permisos y estado en la base de datos.</p>
-  {actions.includes('approve') && <div className={styles.form}><label htmlFor="approval-reason">Motivo para aprobar o rechazar</label><textarea id="approval-reason" value={reason} onChange={e=>setReason(e.target.value)} maxLength={1000} rows={3} disabled={busy}/><p className={styles.note}>Aprobar revalida las reglas y reserva fondos solo si la decisión resulta autorizada. Rechazar cancela definitivamente esta factura.</p></div>}
-  <div className={styles.actions}>{actions.map(action=><button key={action} className={action==='pay'||action==='approve'?styles.button:styles.secondary} disabled={busy} onClick={()=>execute(action)}>{busy?'Procesando…':actionLabels[action]}</button>)}</div>
+  <p className={styles.note}>{agentEnabled?'Las evaluaciones y aprobaciones continúan con el agente: pueden ejecutar el pago simulado si todas las reglas lo permiten.':'Operaciones de simulación. Cada acción vuelve a comprobar permisos y estado en la base de datos.'}</p>
+  {actions.includes('approve') && <div className={styles.form}><label htmlFor="approval-reason">Motivo para aprobar o rechazar</label><textarea id="approval-reason" value={reason} onChange={e=>setReason(e.target.value)} maxLength={1000} rows={3} disabled={busy}/><p className={styles.note}>{agentEnabled?'Aprobar revalida las reglas y continúa automáticamente al pago simulado.':'Aprobar revalida las reglas y reserva fondos si la decisión resulta autorizada.'} Rechazar cancela definitivamente esta factura.</p></div>}
+  <div className={styles.actions}>{actions.map(action=><button key={action} className={action==='pay'||action==='approve'?styles.button:styles.secondary} disabled={busy} onClick={()=>execute(action)}>{busy?'Procesando…':agentEnabled&&action==='approve'?'Aprobar y continuar con el agente':agentEnabled&&action==='evaluate'?'Reevaluar y continuar con el agente':actionLabels[action]}</button>)}</div>
   {actions.includes('pay') && <p className={styles.note}>El pago consume la reserva, debita la wallet y registra el gasto en el presupuesto. No mueve dinero real.</p>}
   {actions.includes('cancel') && <p className={styles.note}>Cancelar libera cualquier reserva activa y deja la factura cancelada definitivamente. No ejecuta un reembolso.</p>}
   {message && <p role="status" aria-live="polite" className={styles.note}>{message}</p>}
