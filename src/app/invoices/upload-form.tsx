@@ -1,8 +1,12 @@
 'use client';
+import {useI18n} from '@/lib/i18n/provider';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from '../workspace.module.css';
 export default function UploadForm({company}:{company:string}) {
+ const {t,locale}=useI18n();
+
   const [busy,setBusy]=useState(false);const [message,setMessage]=useState('');const router=useRouter();
   return <form className={styles.form} onSubmit={async event=>{
     event.preventDefault(); if(busy) return;
@@ -18,9 +22,9 @@ export default function UploadForm({company}:{company:string}) {
     } catch(error) {setMessage(error instanceof Error?error.message:'Falló la conexión. Puedes reintentar.');}
     finally {setBusy(false);if(id) {router.push(`/invoices/${id}${pipelineError?'?pipeline=error':''}`);router.refresh();}}
   }}>
-    <label htmlFor="file">Factura de prueba · PDF, PNG o JPEG · hasta 3 MiB</label>
+    <label htmlFor="file">{t("Factura de prueba · PDF, PNG o JPEG · hasta 3 MiB")}</label>
     <input id="file" name="file" type="file" accept="application/pdf,image/png,image/jpeg" required disabled={busy}/>
-    <button className={styles.button} disabled={busy}>{busy?'Procesando…':'Cargar factura y activar agente'}</button>
-    <p role="status" aria-live="polite" className={styles.note}>{message}</p>
+    <button className={styles.button} disabled={busy}>{t(busy?'Procesando…':'Cargar factura y activar agente')}</button>
+    <p role="status" aria-live="polite" className={styles.note}>{t(message)}</p>
   </form>;
 }
