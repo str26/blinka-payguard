@@ -7,7 +7,8 @@
     "build": "next build --webpack",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "check:services": "node --env-file=.env.local scripts/check-services.mjs"
+    "check:services": "node --env-file=.env.local scripts/check-services.mjs",
+    "test": "tsc -p tsconfig.tests.json && node --test tests/decisions.test.mjs"
   },
   "keywords": [],
   "type": "module",

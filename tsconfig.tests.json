@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "incremental": false,
+    "outDir": ".test-build",
+    "rootDir": "src/modules/decisions/domain",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "plugins": []
+  },
+  "include": ["src/modules/decisions/domain/**/*.ts"],
+  "exclude": ["node_modules"]
+}
