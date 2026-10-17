@@ -1,0 +1,2 @@
+import Link from 'next/link';
+export default function Brand(){return <Link href="/" className="pg-brand" aria-label="Blinka PayGuard, inicio"><span className="pg-logo"><img src="/brand/blinka-light.svg" className="pg-logo-light" width="101" height="34" alt="Blinka"/><img src="/brand/blinka-dark.svg" className="pg-logo-dark" width="101" height="34" alt=""/></span><span className="pg-product">PayGuard</span></Link>;}
