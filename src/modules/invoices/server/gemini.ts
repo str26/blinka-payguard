@@ -31,5 +31,6 @@ export const extractionMessages: Record<string,string> = {
   MODEL:'El modelo configurado no está disponible para esta clave.', REQUEST:'Gemini rechazó el formato de la petición. Revisa la compatibilidad del modelo.',
   TIMEOUT:'Gemini no respondió a tiempo. Puedes reintentar.', PROVIDER:'Gemini no pudo procesar el documento. Puedes reintentar.',
   INCOMPLETE:'Gemini no terminó una extracción válida. Puedes reintentar.', INVALID:'La respuesta de Gemini no pasó la validación. Puedes reintentar.',
+  CLOSED:'La factura se cerró antes de terminar la extracción. Su estado financiero no cambió.',
   STORAGE:'No se pudo leer el archivo privado. Revisa Storage.',
 };
