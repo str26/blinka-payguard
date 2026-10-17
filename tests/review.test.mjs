@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {validateReview} from '../.test-build-invoices/review.js';
+const valid=()=>({request_id:'d0000000-0000-4000-8000-000000000001',version:1,supplier_id:'20000000-0000-4000-8000-000000000001',agreement_id:null,invoice_number:'DEMO-001',currency:'USD',amount:'800.00',issue_date:'2026-10-17',due_date:'2026-10-20',acknowledged:true});
+test('review preserves exact decimal strings',()=>{const input=valid();input.amount='999999999999999999.99';assert.equal(validateReview(input).amount,input.amount);});
+test('explicit human confirmation is mandatory',()=>{for(const acknowledged of [false,null,'true',undefined])assert.throws(()=>validateReview({...valid(),acknowledged}));});
+test('date validation rejects impossible and reversed dates',()=>{for(const values of [{due_date:'2026-02-30'},{issue_date:'2026-10-21'},{issue_date:'17/10/2026'},{due_date:'0000-01-01'}])assert.throws(()=>validateReview({...valid(),...values}));});
+test('rejects floats, localized amounts, negatives and zero',()=>{for(const amount of [800,0,'0.00','-1','1,000.00','1e3','12.001'])assert.throws(()=>validateReview({...valid(),amount}));});
+test('requires an existing-style UUID and positive integer version',()=>{for(const values of [{supplier_id:'bad'},{agreement_id:''},{request_id:'bad'},{version:1.5},{version:0}])assert.throws(()=>validateReview({...valid(),...values}));});
+test('client cannot choose authorization, company or resulting balances',()=>{const result=validateReview({...valid(),status:'authorized',company_id:'other',wallet_balance:'9999',review_reasons:[]});assert.equal('status' in result,false);assert.equal('company_id' in result,false);assert.equal('review_reasons' in result,false);});
+test('missing agreement remains explicit, and invoice number is trimmed',()=>{assert.equal(validateReview({...valid(),invoice_number:' DEMO-001 '}).invoice_number,'DEMO-001');assert.equal(validateReview(valid()).agreement_id,null);});
+test('rejects blank invoice numbers, control characters and unsupported currencies',()=>{for(const values of [{invoice_number:' '},{invoice_number:'a\nb'},{invoice_number:'x'.repeat(101)},{currency:'EUR'}])assert.throws(()=>validateReview({...valid(),...values}));});
