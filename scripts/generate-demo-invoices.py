@@ -19,7 +19,7 @@ body=ParagraphStyle('body',fontName='Helvetica',fontSize=11,leading=17,textColor
 small=ParagraphStyle('small',parent=body,fontSize=9,leading=14,textColor=muted)
 heading=ParagraphStyle('heading',parent=body,fontName='Helvetica-Bold',fontSize=27,leading=33,textColor=green)
 label=ParagraphStyle('label',parent=body,fontName='Helvetica-Bold',fontSize=10,leading=16)
-scenarios=[('AUTO','demo-auto-001.pdf','800.00','DEMO-USD-001','authorized'),('APPROVAL','demo-approval-001.pdf','1500.00','DEMO-USD-1500','pending_approval'),('BLOCK','demo-block-001.pdf','900.00','DEMO-USD-001','blocked')]
+scenarios=[('AUTO','demo-auto-001.pdf','800.00','DEMO-USD-001','paid_simulated'),('APPROVAL','demo-approval-001.pdf','1500.00','DEMO-USD-1500','pending_approval'),('BLOCK','demo-block-001.pdf','900.00','DEMO-USD-001','blocked')]
 manifest=[]
 for tag,filename,amount,agreement,expected in scenarios:
  number=f'{args.batch}-{tag}-001';path=out/filename
@@ -36,6 +36,6 @@ for tag,filename,amount,agreement,expected in scenarios:
  def footer(canvas,_doc):
   canvas.setStrokeColor(line);canvas.line(48,43,547,43);canvas.setFillColor(muted);canvas.setFont('Helvetica',8);canvas.drawString(48,28,'Atlas Demo Global LLC | Documento sintético de prueba');canvas.drawRightString(547,28,'1 / 1')
  doc.build(story,onFirstPage=footer)
- manifest.append({'file':str(path.relative_to(root)),'invoice_number':number,'supplier_code':'DEMO-CO','agreement_reference':agreement,'currency':'USD','amount':amount,'issue_date':args.issue_date,'due_date':args.due_date,'expected_after_review':expected})
+ manifest.append({'file':str(path.relative_to(root)),'invoice_number':number,'supplier_code':'DEMO-CO','agreement_reference':agreement,'currency':'USD','amount':amount,'issue_date':args.issue_date,'due_date':args.due_date,'expected_after_agent':expected})
 (root/'examples/demo-invoices.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 print('Generated 3 synthetic PDFs and examples/demo-invoices.json')
