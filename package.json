@@ -1,0 +1,30 @@
+{
+  "name": "blinka-payguard",
+  "version": "0.1.0",
+  "description": "Prototipo independiente para el reto Blinka de Hackathon 30X",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build --webpack",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "check:services": "node --env-file=.env.local scripts/check-services.mjs"
+  },
+  "keywords": [],
+  "type": "module",
+  "dependencies": {
+    "next": "16.4.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "server-only": "0.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "typescript": "7.0.2"
+  },
+  "private": true,
+  "engines": {
+    "node": "22.x"
+  }
+}
