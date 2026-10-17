@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {validateAction,availableActions} from '../.test-build-invoices/actions.js';
+const request_id='d0000000-0000-4000-8000-000000000001';const decision_id='d0000000-0000-4000-8000-000000000002';
+test('payment payload contains no client-selected balance, amount or company',()=>{const r=validateAction({request_id,action:'pay',amount:'1',status:'paid_simulated',company_id:'other'});assert.deepEqual(r,{request_id,action:'pay',decision_id:null,reason:null});});
+test('approval and rejection require decision and human reason',()=>{for(const action of ['approve','reject']){for(const values of [{},{decision_id},{decision_id,reason:' '},{decision_id,reason:'x'.repeat(1001)}])assert.throws(()=>validateAction({request_id,action,...values}));assert.equal(validateAction({request_id,action,decision_id,reason:' Revisado '}).reason,'Revisado');}});
+test('rejects unsupported operations including refund',()=>{for(const action of ['refund','transfer','delete','PAY',null])assert.throws(()=>validateAction({request_id,action}));});
+test('rejects reused approval parameters on another action',()=>{for(const action of ['pay','cancel','evaluate'])assert.throws(()=>validateAction({request_id,action,decision_id,reason:'test'}));});
+test('request identifier must be UUID',()=>{for(const value of ['',null,'request-1'])assert.throws(()=>validateAction({request_id:value,action:'pay'}));});
+test('operator cannot see payment, approval or cancellation controls',()=>{assert.deepEqual(availableActions('authorized','operator',true),['evaluate']);assert.deepEqual(availableActions('pending_approval','operator',true),['evaluate']);});
+test('approver receives controls matching state and available decision',()=>{assert.deepEqual(availableActions('authorized','approver',true),['evaluate','pay','cancel']);assert.deepEqual(availableActions('pending_approval','approver',true),['evaluate','approve','reject','cancel']);assert.deepEqual(availableActions('pending_approval','approver',false),['evaluate','cancel']);});
+test('closed invoices and unknown roles expose no actions',()=>{for(const s of ['paid_simulated','cancelled','processing','received','unknown'])assert.deepEqual(availableActions(s,'admin',true),[]);assert.deepEqual(availableActions('authorized','stranger',true),[]);});

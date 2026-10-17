@@ -11,7 +11,8 @@
     "test": "tsc -p tsconfig.tests.json && node --test tests/decisions.test.mjs",
     "test:invoices": "tsc -p tsconfig.invoices-tests.json && node --test tests/extraction.test.mjs",
     "list:gemini-models": "node --env-file=.env.local scripts/list-gemini-models.mjs",
-    "test:review": "tsc -p tsconfig.invoices-tests.json && node --test tests/review.test.mjs"
+    "test:review": "tsc -p tsconfig.invoices-tests.json && node --test tests/review.test.mjs",
+    "test:actions": "tsc -p tsconfig.invoices-tests.json && node --test tests/actions.test.mjs"
   },
   "keywords": [],
   "type": "module",
