@@ -1,0 +1,35 @@
+[
+  {
+    "file": "output/pdf/demo-auto-001.pdf",
+    "invoice_number": "DEMO-AUTO-001",
+    "supplier_code": "DEMO-CO",
+    "agreement_reference": "DEMO-USD-001",
+    "currency": "USD",
+    "amount": "800.00",
+    "issue_date": "2026-10-17",
+    "due_date": "2026-10-20",
+    "expected_after_review": "authorized"
+  },
+  {
+    "file": "output/pdf/demo-approval-001.pdf",
+    "invoice_number": "DEMO-APPROVAL-001",
+    "supplier_code": "DEMO-CO",
+    "agreement_reference": "DEMO-USD-1500",
+    "currency": "USD",
+    "amount": "1500.00",
+    "issue_date": "2026-10-17",
+    "due_date": "2026-10-20",
+    "expected_after_review": "pending_approval"
+  },
+  {
+    "file": "output/pdf/demo-block-001.pdf",
+    "invoice_number": "DEMO-BLOCK-001",
+    "supplier_code": "DEMO-CO",
+    "agreement_reference": "DEMO-USD-001",
+    "currency": "USD",
+    "amount": "900.00",
+    "issue_date": "2026-10-17",
+    "due_date": "2026-10-20",
+    "expected_after_review": "blocked"
+  }
+]
