@@ -10,7 +10,7 @@ const source=fs.readFileSync(new URL('../src/app/invoices/[id]/retry-button.tsx'
 const compiled=require('next/dist/compiled/babel/core').transformSync(source,{filename:'retry-button.tsx',presets:[[require.resolve('next/babel'),{'preset-react':{runtime:'automatic'},'preset-env':{targets:{node:'current'}}}]],babelrc:false,configFile:false}).code;
 function component({busy=false,error='',fetch=async()=>({ok:true,json:async()=>({status:'blocked'})})}={}){
  let index=0,refreshes=0;const updates=[];
- const customRequire=id=>id.startsWith('@babel/runtime/')?require('next/dist/compiled/'+id):id==='react'?{...React,useState:()=>[index++===0?busy:error,value=>updates.push(value)]}:id==='next/navigation'?{useRouter:()=>({refresh:()=>refreshes++})}:id.endsWith('.css')?{panel:'panel',row:'row',copy:'copy',button:'button',progress:'progress',error:'error'}:require(id);
+ const customRequire=id=>id==='@/lib/i18n/provider'?{useI18n:()=>({locale:'es',t:value=>value})}:id.startsWith('@babel/runtime/')?require('next/dist/compiled/'+id):id==='react'?{...React,useState:()=>[index++===0?busy:error,value=>updates.push(value)]}:id==='next/navigation'?{useRouter:()=>({refresh:()=>refreshes++})}:id.endsWith('.css')?{panel:'panel',row:'row',copy:'copy',button:'button',progress:'progress',error:'error'}:require(id);
  const exports={};vm.runInNewContext(compiled,{exports,require:customRequire,fetch});
  const element=exports.default({id:'invoice-1'});
  return {element,html:renderToStaticMarkup(element),updates,refreshes:()=>refreshes};

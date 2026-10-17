@@ -1,0 +1,22 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+import {createRequire} from 'node:module';
+const require=createRequire(import.meta.url);
+const dictionary=JSON.parse(fs.readFileSync(new URL('../src/lib/i18n/en.json',import.meta.url),'utf8'));
+const source=fs.readFileSync(new URL('../src/lib/i18n/translate.ts',import.meta.url),'utf8');
+const compiled=require('next/dist/compiled/babel/core').transformSync(source,{filename:'translate.ts',presets:[[require.resolve('next/babel'),{'preset-env':{targets:{node:'current'}}}]],babelrc:false,configFile:false}).code;
+const exported={};vm.runInNewContext(compiled,{exports:exported,require:id=>id==='./en.json'?dictionary:id.startsWith('@babel/runtime/')?require('next/dist/compiled/'+id):require(id)});
+const {translate:t,validLocale}=exported;
+test('only supported languages are accepted',()=>{assert.equal(validLocale('en'),'en');for(const value of ['es','pt','EN','<script>',null])assert.equal(validLocale(value),'es');});
+test('Spanish is preserved exactly, including unknown messages',()=>{for(const value of ['Reintentar agente','Saldo disponible','Unknown','  Factura  '])assert.equal(t(value,'es'),value);});
+test('English covers key actions, statuses, extraction and sign-in errors',()=>{for(const [es,en] of [['Reintentar agente','Retry agent'],['Saldo disponible','Available balance'],['Aprobar y continuar con el agente','Approve and continue with agent'],['Pagada en simulación','Paid in simulation'],['No se pudo iniciar sesión. Revisa tus credenciales y la confirmación del correo.','Could not sign in. Check your credentials and email confirmation.']])assert.equal(t(es,'en'),en);});
+test('funds shortage preserves exact currency and decimal strings',()=>{
+ assert.equal(t('Fondos insuficientes. Requerido: USD 1500.00. Disponible: USD 1300.00. Faltante: USD 200.00. No se ejecutó el pago.','en'),'Insufficient funds. Required: USD 1500.00. Available: USD 1300.00. Shortfall: USD 200.00. No payment was executed.');
+ assert.match(t('Presupuesto insuficiente. Requerido: COP 5000000.00. Disponible: COP 4999999.99. Faltante: COP 0.01. No se ejecutó el pago.','en'),/Shortfall: COP 0.01/);
+});
+test('dynamic result and refund messages are localized without modifying values',()=>{assert.equal(t('Resultado: Pagada en simulación.','en'),'Result: Paid in simulation.');assert.equal(t('Reembolso simulado registrado: MXN 0.01.','en'),'Simulated refund recorded: MXN 0.01.');});
+test('unknown original content and non-string data remain unchanged',()=>{assert.equal(t('Servicios propios de mi empresa','en'),'Servicios propios de mi empresa');assert.equal(t('DEMO-USD-001','en'),'DEMO-USD-001');assert.equal(t(1000,'en'),1000);const object={amount:'1500.00'};assert.equal(t(object,'en'),object);});
+test('surrounding whitespace is preserved for inline labels',()=>assert.equal(t(' · Rol: ','en'),' · Role: '));
+test('translation has no API, SQL, currency-conversion or ledger mutation capability',()=>{assert.doesNotMatch(source,/\bfetch\(|\.rpc\(|createSupabase|Number\(|parseFloat\(/);});
