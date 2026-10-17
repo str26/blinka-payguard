@@ -9,5 +9,5 @@ export default function RetryButton({id}:{id:string}) {
     try {const res=await fetch(`/api/invoices/${id}/extract`,{method:'POST'});const body=await res.json();if(!res.ok)setError(body.error || 'No se pudo extraer.');}
     catch{setError('Falló la conexión. Vuelve a cargar para comprobar el estado.');}
     finally{setBusy(false);router.refresh();}
-  }}>{busy?'Extrayendo…':'Extraer / reintentar'}</button><p role="status" className={styles.error}>{error}</p></div>;
+  }}>{busy?'Procesando agente…':'Reintentar agente'}</button><p role="status" className={styles.error}>{error}</p></div>;
 }

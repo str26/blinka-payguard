@@ -16,7 +16,7 @@ export default async function Invoices({searchParams}:{searchParams:Promise<{com
   return <main className={styles.workspace}>
     <Link className={styles.back} href={`/dashboard?company=${selected.company_id}`}>← Panel</Link>
     <p className={styles.eyebrow}>PAYGUARD · FACTURAS DE PRUEBA</p><h1 className={styles.title}>De documento a datos verificables</h1>
-    <p className={styles.description}>El archivo se enviará a Gemini para extraer sus datos. Usa facturas ficticias para esta demo. La extracción no autoriza ni ejecuta pagos.</p>
+    <p className={styles.description}>El archivo se enviará a Gemini para extraer sus datos. Usa facturas ficticias para esta demo. El agente valida la extracción con las reglas de la empresa y puede ejecutar el pago simulado automáticamente. Las excepciones requieren intervención humana.</p>
     {['admin','operator'].includes(selected.role)?<UploadForm company={selected.company_id}/>:<p>Tu rol permite consultar. La carga corresponde al administrador u operador.</p>}
     <section className={styles.section}><h2>Últimas 30 facturas</h2>
       {invoices.error?<p className={styles.error}>No se pudieron cargar las facturas. Verifica que esté aplicada la migración 003.</p>:

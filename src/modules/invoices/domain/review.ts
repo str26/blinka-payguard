@@ -20,6 +20,6 @@ export function validateReview(raw:unknown):ReviewInput {
  return {request_id:r.request_id,version:r.version as number,supplier_id:r.supplier_id,agreement_id:r.agreement_id as string|null,
   invoice_number:r.invoice_number.trim(),currency:r.currency,amount:r.amount,issue_date:r.issue_date,due_date:r.due_date,acknowledged:true};
 }
-export const statusLabels:Record<string,string>={received:'Recibida',processing:'Procesando',needs_review:'Requiere revisión',pending_approval:'Pendiente de aprobación',authorized:'Autorizada · fondos reservados',blocked:'Bloqueada',paid_simulated:'Pagada en simulación',cancelled:'Cancelada'};
+export const statusLabels:Record<string,string>={received:'Recibida',processing:'Procesando',needs_review:'Requiere revisión',pending_approval:'Pendiente de aprobación',authorized:'Autorizada · fondos reservados',blocked:'Bloqueada · requiere revisión',paid_simulated:'Pagada en simulación',cancelled:'Cancelada'};
 export const checkLabels:Record<string,string>={REVIEW_REASONS:'Revisión humana',FIELDS:'Campos obligatorios',SUPPLIER:'Proveedor permitido',AGREEMENT:'Coincidencia con el acuerdo',POLICY:'Política de la moneda',WALLET:'Wallet de la moneda',PERIOD_BUDGET:'Presupuesto del periodo',ABSOLUTE_LIMIT:'Límite absoluto',FUNDS:'Fondos disponibles',BUDGET:'Presupuesto disponible',APPROVAL_THRESHOLD:'Umbral de autorización automática'};
 export const outcomeLabels:Record<string,string>={pass:'Cumple',block:'Bloquea',review:'Requiere revisión',approval:'Requiere aprobación'};
