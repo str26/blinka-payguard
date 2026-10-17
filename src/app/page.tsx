@@ -1,20 +1,8 @@
-import Link from "next/link";
-const steps = [
-  ["01", "Recibir", "Facturas ficticias en PDF e imagen."],
-  ["02", "Evaluar", "Interpretación con IA y validación de políticas."],
-  ["03", "Supervisar", "Excepciones, aprobación humana y trazabilidad."],
-];
-export default function Home() {
-  return <main>
-    <header><a className="brand" href="/">PayGuard<span>BLINKA CHALLENGE</span></a><span className="badge">Prototipo · Sin dinero real</span></header>
-    <section className="hero">
-      <p className="eyebrow">HACKATHON 30X · OCTUBRE 2026</p>
-      <h1>Cada factura.<br/><span>Una decisión explicable.</span></h1>
-      <p className="intro">Asistencia para revisar cuentas por pagar, aplicar las reglas de la empresa y mantener el control humano sobre las excepciones.</p>
-      <p><Link href="/login" style={{color:"#b8edb2",fontWeight:700}}>Iniciar sesión →</Link></p>
-      <aside><strong>Base del proyecto desplegada</strong><p>Ya puedes iniciar sesión y consultar las wallets y políticas de tu empresa. La carga de facturas y la extracción con Gemini se incorporarán en la siguiente etapa.</p></aside>
-    </section>
-    <section className="steps" aria-label="Flujo previsto">{steps.map(([number,title,description])=><article key={number}><span className="number">{number}</span><h2>{title}</h2><p>{description}</p><span className="pending">Por implementar</span></article>)}</section>
-    <footer>Proyecto independiente para el reto Blinka. Datos de demostración exclusivamente ficticios.</footer>
-  </main>;
-}
+import Link from 'next/link';
+import Brand from '@/components/brand';
+import ThemeControl from '@/components/theme-control';
+const steps=[['01','Recibe y comprende','Carga una factura en PDF o imagen. Gemini extrae sus datos y conserva las evidencias para revisarlas.'],['02','Verifica y actúa','El agente contrasta proveedor, acuerdo, límites, fondos y presupuesto. Si todo cumple, paga en simulación.'],['03','Te consulta las excepciones','Cuando algo requiere atención, te explica el motivo. Tu aprobación vuelve a pasar por todas las reglas.']];
+export default function Home(){return <><a className="pg-skip" href="#presentation">Ir al contenido</a><header className="pg-public-header"><Brand/><nav aria-label="Presentación"><a href="#como">Cómo funciona</a><a href="#control">Control y reglas</a></nav><div className="pg-public-actions"><ThemeControl/><Link href="/login" className="pg-primary">Iniciar sesión ↗</Link></div></header>
+<main id="presentation"><section className="pg-hero"><div className="pg-hero-copy"><span className="pg-kicker">AUTONOMÍA CON CONTROL</span><h1>Tus reglas.<br/>Pagos <em>bajo control.</em></h1><p>Un agente que revisa tus facturas, paga dentro de tus reglas y te consulta las excepciones. Menos trabajo operativo. Más claridad en cada decisión.</p><div className="pg-hero-cta"><Link href="/dashboard" className="pg-primary">Entrar al panel →</Link><a href="#como" className="pg-secondary">Cómo funciona</a></div><span className="pg-fine">Demostración con datos ficticios · Sin movimientos de dinero real</span></div>
+<aside className="pg-preview-card" id="control" aria-label="Ejemplo ilustrativo de factura"><div className="pg-row"><strong>Factura de ejemplo</strong><span className="pg-badge good">✓ Cumple las reglas</span></div><div className="pg-preview-value pg-amount">USD 800,00</div><ul className="pg-checklist"><li><span>✓</span>Proveedor autorizado</li><li><span>✓</span>Importe y moneda coinciden con el acuerdo</li><li><span>✓</span>Fondos y presupuesto disponibles</li><li><span>✓</span>Dentro del límite automático</li></ul><div className="pg-preview-foot"><span className="pg-dot"/>El agente puede continuar al pago simulado.<br/>Ejemplo ilustrativo; no representa una operación ejecutada.</div></aside></section>
+<section className="pg-steps" id="como" aria-label="Cómo funciona">{steps.map(([n,title,description])=><article className="pg-step" key={n}><span>{n} /</span><h2>{title}</h2><p>{description}</p></article>)}</section></main><footer className="pg-public-footer"><span>Proyecto independiente para el reto Blinka · Hackathon 30X</span><span>Trazabilidad en cada paso. Control en cada excepción.</span></footer></>;}
