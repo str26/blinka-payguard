@@ -1,9 +1,10 @@
+import { continueAfterUpload } from '@/modules/agent/server/process-invoice';
 import { createHash, randomUUID } from 'node:crypto';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { MAX_FILE_SIZE, detectMime } from '@/modules/invoices/domain/extraction';
 import { checkOrigin, errorResponse, HttpError, requireCompany } from '@/modules/invoices/server/access';
 export const runtime='nodejs';
-export const maxDuration=30;
+export const maxDuration=90;
 export async function POST(request:Request) {
   try {
     checkOrigin(request);
@@ -33,7 +34,7 @@ export async function POST(request:Request) {
     if(duplicate.data) {
       const existing=await client.from('invoices').select('id').eq('document_id',duplicate.data.id).single();
       if(existing.error) throw new HttpError(503,'No se pudo recuperar la factura existente.');
-      return Response.json({id:existing.data.id,duplicate:true},{headers:{'Cache-Control':'private, no-store'}});
+      return Response.json({id:existing.data.id,duplicate:true,...await continueAfterUpload(client,existing.data.id)},{headers:{'Cache-Control':'private, no-store'}});
     }
     const admin=createSupabaseAdminClient(); const document=randomUUID(); const path=`${company}/${document}`;
     const uploaded=await admin.storage.from('payguard-invoices').upload(path,bytes,{contentType:mime,upsert:false});
@@ -46,6 +47,6 @@ export async function POST(request:Request) {
       throw new HttpError(503,'No se pudo registrar la factura. Verifica la migración 003 o el límite de 30 archivos por hora.');
     }
     if(result.data.duplicate) await admin.storage.from('payguard-invoices').remove([path]);
-    return Response.json(result.data,{status:201,headers:{'Cache-Control':'private, no-store'}});
+    return Response.json({...result.data,...await continueAfterUpload(client,result.data.id)},{status:201,headers:{'Cache-Control':'private, no-store'}});
   } catch(error) { return errorResponse(error); }
 }
