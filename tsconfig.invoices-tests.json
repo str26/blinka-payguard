@@ -1,0 +1,5 @@
+{
+ "extends":"./tsconfig.json",
+ "compilerOptions":{"noEmit":false,"incremental":false,"outDir":".test-build-invoices","rootDir":"src/modules/invoices/domain","module":"NodeNext","moduleResolution":"NodeNext","plugins":[]},
+ "include":["src/modules/invoices/domain/**/*.ts"],"exclude":["node_modules"]
+}

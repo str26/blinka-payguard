@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { validateExtraction,fieldNames,detectMime } from '../.test-build-invoices/extraction.js';
+function sample(){return {fields:Object.fromEntries(fieldNames.map(k=>[k,{value:null,evidence:null}])),warnings:[]};}
+test('money is preserved exactly above JS safe integer range',()=>{const s=sample();s.fields.amount={value:'999999999999999999.99',evidence:'Total USD 999999999999999999.99'};assert.equal(validateExtraction(s).fields.amount.value,'999999999999999999.99');});
+test('ambiguous localized totals are not coerced to a payable amount',()=>{for(const value of ['1,200.00','1.200,00','8e2','-20','0','0.00','100.001','1000000000000000000']){const s=sample();s.fields.amount={value,evidence:value};assert.equal(validateExtraction(s).fields.amount.value,null,value);}});
+test('missing evidence discards an otherwise valid extracted value',()=>{const s=sample();s.fields.amount={value:'800',evidence:null};assert.equal(validateExtraction(s).fields.amount.value,null);});
+test('invalid calendar dates and ambiguous currencies require review',()=>{const s=sample();s.fields.due_date={value:'2026-02-30',evidence:'30 feb 2026'};s.fields.currency={value:'$',evidence:'$800'};const out=validateExtraction(s);assert.equal(out.fields.due_date.value,null);assert.equal(out.fields.currency.value,null);});
+test('normalizes decimal scale without floating point arithmetic',()=>{const s=sample();s.fields.amount={value:'800.1',evidence:'Total 800.10'};assert.equal(validateExtraction(s).fields.amount.value,'800.10');});
+test('rejects malformed model output rather than showing fabricated fallback',()=>{for(const raw of [null,[],{fields:{},warnings:[]},{fields:sample().fields,warnings:'ok'}])assert.throws(()=>validateExtraction(raw));});
+test('unexpected fields cannot set payment status or privileged identifiers',()=>{const s=sample();s.status='authorized';s.wallet_balance='999999';s.fields.company_id={value:'other',evidence:'override'};const out=validateExtraction(s);assert.equal('status' in out,false);assert.equal('company_id' in out.fields,false);});
+test('file signatures reject HTML and accept only intended formats',()=>{assert.equal(detectMime(new TextEncoder().encode('<html>fake.pdf</html>')),null);assert.equal(detectMime(new TextEncoder().encode('%PDF-1.7')),'application/pdf');assert.equal(detectMime(Uint8Array.from([137,80,78,71,13,10,26,10])),'image/png');assert.equal(detectMime(Uint8Array.from([255,216,255])),'image/jpeg');});
