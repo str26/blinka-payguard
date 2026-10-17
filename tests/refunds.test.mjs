@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {minorUnits,refundSummary,validateRefund} from '../.test-build-invoices/refunds.js';
+const request_id='d0000000-0000-4000-8000-000000000001';
+test('partial returns retain exact decimal balance',()=>{assert.deepEqual(refundSummary('800.00',['200.00','0.10']),{paid:'800.00',refunded:'200.10',remaining:'599.90'});});
+test('full return produces zero remaining without float errors',()=>{assert.equal(refundSummary('0.30',['0.10','0.20']).remaining,'0.00');});
+test('large amounts remain exact beyond JS number precision',()=>{assert.equal(refundSummary('999999999999999999.99',['0.01']).remaining,'999999999999999999.98');});
+test('ledger over-refund blocks display of another authorization',()=>{assert.throws(()=>refundSummary('800',['801']));});
+test('malformed and floating point amounts are rejected',()=>{for(const amount of [800,'1e3','1,000.00','-1','0.00','0','1.001'])assert.throws(()=>validateRefund({request_id,amount,reason:'Devolución'}));});
+test('refund requires idempotency key and documented reason',()=>{assert.throws(()=>validateRefund({request_id:'bad',amount:'1',reason:'a'}));assert.throws(()=>validateRefund({request_id,amount:'1',reason:' '}));assert.throws(()=>validateRefund({request_id,amount:'1',reason:'a'.repeat(1001)}));});
+test('caller cannot choose wallet, currency, original payment or accounting period',()=>{assert.deepEqual(validateRefund({request_id,amount:'200.00',reason:' Ajuste ',currency:'EUR',wallet_id:'other',original_movement_id:'fake',budget_period:'2030-01-01'}),{request_id,amount:'200.00',reason:'Ajuste'});});
+test('money parser preserves one minor unit exactly',()=>{assert.equal(minorUnits('0.01'),1n);assert.throws(()=>minorUnits('NaN'));});
