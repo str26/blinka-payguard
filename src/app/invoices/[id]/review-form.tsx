@@ -1,0 +1,47 @@
+'use client';
+import { useRef,useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { validateReview } from '@/modules/invoices/domain/review';
+import styles from '../../workspace.module.css';
+export type SupplierOption={id:string;code:string;name:string;allowed:boolean};
+export type AgreementOption={id:string;supplier_id:string;reference:string;currency:string;amount:string};
+export type ReviewFields={supplier_id:string;agreement_id:string;invoice_number:string;currency:string;amount:string;issue_date:string;due_date:string};
+export default function ReviewForm({id,version,initial,suppliers,agreements}:{id:string;version:number;initial:ReviewFields;suppliers:SupplierOption[];agreements:AgreementOption[]}){
+ const [fields,setFields]=useState(initial);const [acknowledged,setAcknowledged]=useState(false);
+ const [busy,setBusy]=useState(false);const [error,setError]=useState('');
+ const pending=useRef<{fingerprint:string;request:string}|null>(null);const router=useRouter();
+ function change(key:keyof ReviewFields,value:string){setAcknowledged(false);setFields(old=>({...old,[key]:value,...((key==='supplier_id'||key==='currency')?{agreement_id:''}:{})}));}
+ const available=agreements.filter(a=>a.supplier_id===fields.supplier_id && a.currency===fields.currency);
+ return <section className={styles.section}><h2>Revisar y confirmar</h2>
+  <p className={styles.description}>Corrige los datos contra el original. Selecciona el proveedor registrado y su acuerdo. Si las reglas autorizan, se reservarán fondos; esta acción no ejecuta el pago simulado.</p>
+  <form className={styles.form} onSubmit={async event=>{
+   event.preventDefault();if(busy)return;setError('');
+   const values={version,...fields,agreement_id:fields.agreement_id||null,acknowledged};
+   const fingerprint=JSON.stringify(values);
+   if(!pending.current || pending.current.fingerprint!==fingerprint)pending.current={fingerprint,request:crypto.randomUUID()};
+   let input;
+   try{input=validateReview({...values,request_id:pending.current.request});}
+   catch(error){setError(error instanceof Error?error.message:'Revisa los datos.');return;}
+   setBusy(true);
+   try{
+    const res=await fetch(`/api/invoices/${id}/confirm`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(input)});
+    const body=await res.json();
+    if(!res.ok){setError(body.error||'No se pudo confirmar.');return;}
+    pending.current=null;
+    router.refresh();
+   }catch{setError('No se pudo confirmar la respuesta. Reintenta sin cambiar los datos: se usará la misma solicitud para evitar duplicados.');}
+   finally{setBusy(false);}
+  }}>
+   <label htmlFor="review-number">Número de factura</label><input id="review-number" value={fields.invoice_number} onChange={e=>change('invoice_number',e.target.value)} required maxLength={100} disabled={busy}/>
+   <label htmlFor="review-supplier">Proveedor registrado</label><select id="review-supplier" value={fields.supplier_id} onChange={e=>change('supplier_id',e.target.value)} required disabled={busy}><option value="">Seleccionar proveedor</option>{suppliers.map(s=><option key={s.id} value={s.id}>{s.name} · {s.code}{s.allowed?'':' · NO permitido'}</option>)}</select>
+   <label htmlFor="review-currency">Moneda</label><select id="review-currency" value={fields.currency} onChange={e=>change('currency',e.target.value)} required disabled={busy}><option value="">Seleccionar moneda</option>{['USD','COP','MXN'].map(c=><option key={c}>{c}</option>)}</select>
+   <label htmlFor="review-amount">Importe decimal · ejemplo 800.00</label><input id="review-amount" inputMode="decimal" value={fields.amount} onChange={e=>change('amount',e.target.value)} required maxLength={21} disabled={busy}/>
+   <label htmlFor="review-agreement">Acuerdo del proveedor y moneda</label><select id="review-agreement" value={fields.agreement_id} onChange={e=>change('agreement_id',e.target.value)} disabled={busy}><option value="">Sin acuerdo confirmado · requerirá revisión</option>{available.map(a=><option key={a.id} value={a.id}>{a.reference} · {a.currency} {a.amount}</option>)}</select>
+   <label htmlFor="review-issued">Fecha de emisión</label><input id="review-issued" type="date" value={fields.issue_date} onChange={e=>change('issue_date',e.target.value)} min="1900-01-01" max="9999-12-31" required disabled={busy}/>
+   <label htmlFor="review-due">Fecha de vencimiento</label><input id="review-due" type="date" value={fields.due_date} onChange={e=>change('due_date',e.target.value)} min={fields.issue_date||'1900-01-01'} max="9999-12-31" required disabled={busy}/>
+   <label className={styles.confirmation}><input type="checkbox" checked={acknowledged} onChange={e=>setAcknowledged(e.target.checked)} required disabled={busy}/>Revisé los campos y las advertencias de Gemini contra el documento original. Confirmo los datos para evaluar las reglas y, si procede, reservar fondos de simulación.</label>
+   {error && <p role="alert" className={styles.error}>{error}</p>}
+   <button className={styles.button} disabled={busy}>{busy?'Confirmando y evaluando…':'Confirmar datos y evaluar reglas'}</button>
+  </form>
+ </section>;
+}
