@@ -218,17 +218,11 @@ Versiones y scripts: [`package.json`](./package.json). Instalación reproducible
 
    Abre [http://localhost:3000](http://localhost:3000), inicia sesión en `/login` y entra al dashboard. Carga PDF, PNG o JPEG de **hasta 3 MiB**, un documento con una sola factura por carga. Usa documentos ficticios: el archivo se transmite a Google para su extracción.
 
-   Usuarios de prueba:
-
+   Usuarios de prueba:   
    | Usuario | Rol | Contraseña |
-
    | ------- | --- | ---------- |
-
    | admin@payguard.example | Administrador | Admin2026\* |
-
    | aprobador@payguard.example | Aprobador | Aprobador2026\* |
-
-
 
    Para ejecutar localmente la compilación de producción:
 
